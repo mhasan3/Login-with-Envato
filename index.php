@@ -22,9 +22,12 @@ class Envato_API
         add_filter('show_admin_bar', [$this, 'hide_admin_bar']);
     }
 
-    function hide_admin_bar()
+    function hide_admin_bar($show)
     {
-        return false;
+        if ( ! current_user_can( 'administrator' ) ) :
+            return false;
+        endif;
+        return $show;
     }
 
     function filter_the_content_in_the_main_loop($content)
@@ -205,6 +208,40 @@ class Envato_API
 
         }
     }
+}
+
+add_shortcode('category_block', 'category_block');
+
+function category_block(){
+    ob_start();
+    get_search_form();
+
+
+    $categories = get_terms(
+        'category',
+        array('parent' => 0)
+    );
+                    ?>
+    <div class="row">
+        <?foreach ($categories as $category){ ?>
+            <div class="col-md-6">
+                <?php echo esc_attr($category->name);?>
+                <div class="categories">
+                    <?php
+                    $taxonomy_name = 'category';
+                    $term_children = get_term_children( $category->term_id, $taxonomy_name );
+                    foreach ($term_children as $child){
+                        $term = get_term( $child, $taxonomy );
+                        echo '<a href="'. get_term_link( $child, $taxonomy_name ) .'">'. $term->name .'</a>';
+                    }
+                    ?>
+                </div>
+            </div>
+        <?php } ?>
+    </div>
+<?php
+$html = ob_get_clean();
+return $html;
 }
 
 $en = new Envato_API();
